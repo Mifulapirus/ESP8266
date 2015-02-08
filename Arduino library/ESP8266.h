@@ -12,19 +12,40 @@
 
 //Messages sent
 #define NO_ERROR	0
-#define ResponseOK     "OK"
-#define ResponseCheckDisabled	-1
-#define Error          "ERROR "
+
+//Error Table
   #define ErrorUnableToLink             1
   #define ErrorUnableToUnlink           2
   #define SendLongMessageError          3  
   #define ErrorModuleDoesntRespond      4
   #define ErrorModuleDoesntRespondToAT  5
   #define ErrorResponseNotFound         6
-  #define ErrorUnableToConnect          7
-  #define ErrorStringNotFound			8
+  #define ErrorNoResponse				7
+  #define ErrorUnableToConnect          8
+  #define ErrorStringNotFound			9
   
-#define CIPSTART       "AT+CIPSTART=\"TCP\",\""
+//AT Commands
+#define AT_CMD_AT				"AT"
+#define CIPSTART       			"AT+CIPSTART=\"TCP\",\""
+#define AT_CMD_JOIN_AP			"AT+CWJAP=\""
+#define AT_CMD_SERVER_MODE 		"AT+CIPSERVER="
+#define AT_CMD_CONNECTION_MODE	"AT+CIPMUX="
+#define AT_CMD_WIFI_MODE		"AT+CWMODE="
+#define AT_CMD_GET_IP			"AT+CIFSR"
+#define AT_CMD_CIPMODE_ON		"AT+CIPMODE=1"
+#define AT_CMD_CIPMODE_OFF		"AT+CIPMODE=1"
+#define AT_CMD_CLOSE_CONNECTION	"AT+CIPCLOSE"
+#define AT_CMD_SEND				"AT+CIPSEND="
+
+//AT Responses
+#define AT_RESP				"RCV: "
+#define AT_RESP_READY		"Ready"
+#define AT_RESP_IPD			"+IPD"
+#define AT_RESP_LINK		"Link"
+#define AT_RESP_UNLINK		"Unlink"
+#define AT_RESP_OK     		"OK"
+#define AT_RESP_NO_CHANGE	"no change"
+
 
 class ESP8266 : public SoftwareSerial {
   public:
@@ -35,18 +56,26 @@ class ESP8266 : public SoftwareSerial {
     int WiFiReset();
     int CheckWiFi();
 	int WiFiMode(int);
+	int ServerMode(String);
+	int ConnectionMode(String);
     int ConnectWiFi(String SSID, String PASS);
     String GetIP();
     void SetCIPMODE(boolean);
     int ExpectResponse(char*);
 	String GetResponse(char*);
-	int Contains(String s, String search);
+	boolean Contains(String s, String search);
     int OpenTCP(String, String);
     int CloseTCP();
     int SendLongMessage(char*);
     char* WiFiRead();
+	String ReadAll();
+	String ReadCmd();
     void WiFiEcho();
     void SendDebug(String);
+	
+	String LastReceived;
+	String IP;
+	 
 
   private:
     int _RST_Pin;

@@ -12,6 +12,7 @@
 ESP8266::ESP8266(unsigned char RX_Pin, unsigned char TX_Pin, unsigned char RST_Pin) : SoftwareSerial(RX_Pin, TX_Pin) {
 	begin(9600);
 	_RST_Pin = RST_Pin;
+	IP="0.0.0.0";
 	pinMode(_RST_Pin, OUTPUT);
 }
 int ESP8266::CheckBaudrate() {
@@ -42,18 +43,18 @@ int ESP8266::WiFiReboot() {
   digitalWrite(_RST_Pin, LOW);
   delay(500);
   digitalWrite(_RST_Pin, HIGH);
-  return ExpectResponse("Ready");
+  return ExpectResponse(AT_RESP_READY);
 }
 
 int ESP8266::WiFiReset() {
   flush();
   println("AT+RST"); // restet and test if module is redy
-  return ExpectResponse("Ready");
+  return ExpectResponse(AT_RESP_READY);
 }
 
 int ESP8266::CheckWiFi() {
-  SendDebug("AT");
-  if (ExpectResponse(ResponseOK)) {
+  SendDebug(AT_CMD_AT);
+  if (ExpectResponse(AT_RESP_OK)) {
     return NO_ERROR;
   }
   else {
@@ -62,92 +63,109 @@ int ESP8266::CheckWiFi() {
 }
 
 int ESP8266::ConnectWiFi(String SSID, String PASS) {
-  String cmd = "AT+CWJAP=\"";
+  String cmd = AT_CMD_JOIN_AP;
   cmd += SSID;
   cmd += "\",\"";
   cmd += PASS;
   cmd += "\"";
   println(cmd);
+  return ExpectResponse(AT_RESP_OK);
+}
+int ESP8266::ServerMode(String _Port) {
+	String cmd = AT_CMD_SERVER_MODE;
+	cmd += "1,";
+	cmd += _Port;
+	println(cmd);
+	return ExpectResponse(AT_RESP_OK);
+}
 
-  String OwnIP = "";
-  char incomingByte = ' ';
-  for(int i=0; i<cmd.length()+8 ;i++) read();
-  
-  if (ExpectResponse(ResponseOK)) {
-    return NO_ERROR;
-  }
-  else {
-    return ErrorUnableToConnect;
-  }
+
+int ESP8266::ConnectionMode(String _Mux) {
+	String cmd = AT_CMD_CONNECTION_MODE;
+	cmd += _Mux;
+	println(cmd);
+	return ExpectResponse(AT_RESP_OK);
 }
 
 int ESP8266::WiFiMode(int _Mode) {
-	print("AT+CWMODE=");
+	print(AT_CMD_WIFI_MODE);
 	println(_Mode);
-	return ExpectResponse("no change");
+	return ExpectResponse(AT_RESP_NO_CHANGE);
 }
 
 String ESP8266::GetIP() {
-	String cmd = "AT+CIFSR";
-	String OwnIP = "";
-	char incomingByte = ' ';
-	println(cmd); // Get IP
-	for(int i=0; i<cmd.length()+5 ;i++) read();
-	delay(100);
-	while (available() > 0) {
-		// read the incoming byte:
-		incomingByte = read();
-		// say what you got:
-		OwnIP += incomingByte;
-		delay(1);
-	}
-	return OwnIP;
+	String _cmd = AT_CMD_GET_IP;
+	String _msg="";
+	println(_cmd); // Get IP
+	_msg = ReadAll();
+	IP = _msg.substring(11,_msg.length()-8);
+	return IP;
 }
 
 void ESP8266::SetCIPMODE(boolean Value) {
-  if (Value) {println("AT+CIPMODE=1");}
-  else {println("AT+CIPMODE=0");}
+  if (Value) {println(AT_CMD_CIPMODE_ON);}
+  else {println(AT_CMD_CIPMODE_OFF);}
 }
 
 int ESP8266::ExpectResponse(char* _Expected) {
-  for (int i = 0; i < 10; i++) {
-    if (find(_Expected)) {
-		while (available()) {read();}
-		return NO_ERROR;
-    }
-
-    else {
-      //TODO: Do something if not found yet?
-    }
-    delay(1);
-  }
-  return ErrorResponseNotFound;
-}
-
-String ESP8266::GetResponse(char* Expected) {
-	long _timeout = 10000;
-	//String _Expected = Expected;
-	String _response;
-  
-	while (_timeout > 0) {
-		_timeout--;
-		while (available()) {
-			_response += String(read());
-			delay(1);
+	String _received = "";
+	for (int i = 0; i < 10000; i++) {
+		_received = ReadAll();
+		if (_received != "") {
+			if (Contains(_received, _Expected))	return NO_ERROR;
 		}
-		if (Contains(Expected, _response) == NO_ERROR) {return "found";}
 		delay(1);
 	}
-	return _response;
+	if (_received == "") return ErrorNoResponse;
+	else return ErrorResponseNotFound;
+}
+		
+
+String ESP8266::ReadAll() {
+  char _InChar;
+  String _response = "";
+  while (available()) {
+    _InChar = read();
+    _response += _InChar;
+    delay(1);
+  }
+  LastReceived = _response;
+  return _response;
+}
+
+String ESP8266::ReadCmd() {
+	String _received = ReadAll();
+	if (_received != "") {
+		if (Contains(_received, AT_RESP_NO_CHANGE)) 	{return AT_RESP_NO_CHANGE;}
+		else if (Contains(_received, AT_RESP_LINK)) 	{return AT_RESP_LINK;}
+		else if (Contains(_received, AT_RESP_UNLINK)) 	{return AT_RESP_UNLINK;}
+		else if (Contains(_received, AT_RESP_IPD)) 	{
+			//FIND Channel, length and Msg
+			String _channel = _received.substring(_received.indexOf(',')+1);
+			String _length = _channel;
+			_length = _length.substring(_channel.indexOf(',')+1, _channel.indexOf(':'));
+			_channel = _channel.substring(0,_channel.indexOf(','));
+			String _msg = _received.substring(_received.indexOf(':')+1, _received.indexOf(':')+1 + _length.toInt());
+			return _msg;
+		}
+		
+		else {
+			String _Unknown = "Unknown: " + _received;
+			return _Unknown;
+			}
+	}
+	return _received;
 }
 
 
-int ESP8266::Contains(String s, String search) {
-    int max = s.length() - search.length();
-    for (int i = 0; i <= max; i++) {
-        if (s.substring(i) == search) return NO_ERROR; 
+
+boolean ESP8266::Contains(String original, String search) {
+    int _searchLength = search.length();
+	int _max = original.length() - _searchLength;
+    for (int i = 0; i <= _max; i++) {
+        if (original.substring(i, i+_searchLength) == search) {return true;}
     }
-    return ErrorStringNotFound;
+    return false;
 } 
 
 int ESP8266::OpenTCP(String IP, String Port) {
@@ -156,21 +174,21 @@ int ESP8266::OpenTCP(String IP, String Port) {
   cmd += "\",";
   cmd += Port;
   SendDebug(cmd);
-  if (!ExpectResponse("Linked")) {
+  if (!ExpectResponse(AT_RESP_LINK)) {
     return ErrorUnableToLink;
   }
   return NO_ERROR;
 }
 
 int ESP8266::CloseTCP() {
-  SendDebug("AT+CIPCLOSE");
-  if (!ExpectResponse("Unlink")) {
+  SendDebug(AT_CMD_CLOSE_CONNECTION);
+  if (!ExpectResponse(AT_RESP_UNLINK)) {
 	return ErrorUnableToUnlink;
 	}
 }
 
 int ESP8266::SendLongMessage(char* ExpectedReply) {
-  print("AT+CIPSEND=");
+  print(AT_CMD_SEND);
   println(_WiFiLongMessage.length());
   delay(200); 
   print(_WiFiLongMessage);
