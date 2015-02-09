@@ -1,146 +1,149 @@
-/*
-  ESP8266.h - Library for controlling the ESP8266 Wifi Module
-  Created by Angel Hernandez, February 7, 2015.
-  Released into the public domain.
-*/
-
+/****************************************************
+* Description: ESP8266 Arduino Library
+* This library helps users working with the WiFi module ESP8266.
+* It manages the AT command messages to communicate and configure 
+* the module.
+* It also manages the communication process by extracting the messages 
+* sent through the serial port
+*****************************************************
+* Author__ = Angel Hernandez
+* Contributors = Angel Hernandez
+* License = GPL
+* version = 0.2
+* Contact = angel@tupperbot.com
+* 			@mifulapirus
+*****************************************************/
 #include <SoftwareSerial.h>
 #include "ESP8266.h"
 
-
 // Contstructor
-ESP8266::ESP8266(unsigned char RX_Pin, unsigned char TX_Pin, unsigned char RST_Pin, long Baud) : SoftwareSerial(RX_Pin, TX_Pin) {
-	begin(Baud);
-	_RST_Pin = RST_Pin;
+ESP8266::ESP8266(unsigned char _rxPin, unsigned char _txPin, unsigned char _rstPin, long _baud) : SoftwareSerial(_rxPin, _txPin) {
+	begin(_baud);
+	_rstPin = _rstPin;
 	IP="0.0.0.0";
-	pinMode(_RST_Pin, OUTPUT);
+	pinMode(_rstPin, OUTPUT);
 }
-int ESP8266::CheckBaudrate() {
-  int Pause=500;
-  long Baudrate[13] = {300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 31250, 38400, 57600, 115200};
+int ESP8266::checkBaudrate() {
+  int _pause=500;
   
   for (int i=0; i<13; i++) {
-    begin(Baudrate[i]);
-    digitalWrite(_RST_Pin, LOW);
-    delay(Pause);
-    digitalWrite(_RST_Pin, HIGH);
-    delay(Pause);
-    WiFiRead();
-    delay(Pause);
+    begin(_baudrates[i]);
+    digitalWrite(_rstPin, LOW);
+    delay(_pause);
+    digitalWrite(_rstPin, HIGH);
+    delay(_pause);
+    wifiRead();
+    delay(_pause);
   }
 }
   
-int ESP8266::InitWiFi(String SSID, String PASS) {
-  if (WiFiReboot() != NO_ERROR) 			{return ErrorRebooting;}
-  if (WiFiMode(1) != NO_ERROR)				{return ErrorWifiMode;}
-  if (ConnectWiFi(SSID, PASS) != NO_ERROR) 	{return ErrorUnableToConnect;}
-  GetIP();
+int ESP8266::initWifi(String _SSID, String _pass) {
+  if (wifiReboot() != NO_ERROR) {return ERROR_REBOOTING;}
+  if (wifiMode(1) != NO_ERROR)	{return ERROR_WIFI_MODE;}
+  if (connectWifi(_SSID, _pass) != NO_ERROR) {return ERROR_UNABLE_TO_CONNECT;}
+  getIP();
   return NO_ERROR;
 }
 
-int ESP8266::WiFiReboot() {
-  digitalWrite(_RST_Pin, LOW);
+int ESP8266::wifiReboot() {
+  digitalWrite(_rstPin, LOW);
   delay(500);
-  digitalWrite(_RST_Pin, HIGH);
-  return ExpectResponse(AT_RESP_READY);
+  digitalWrite(_rstPin, HIGH);
+  return expectResponse(AT_RESP_READY);
 }
 
-int ESP8266::WiFiReset() {
+int ESP8266::wifiReset() {
   flush();
-  println("AT+RST"); // restet and test if module is redy
-  return ExpectResponse(AT_RESP_READY);
+  println(AT_CMD_RST); // restet and test if module is redy
+  return expectResponse(AT_RESP_READY);
 }
 
-int ESP8266::CheckWiFi() {
-  SendDebug(AT_CMD_AT);
-  if (ExpectResponse(AT_RESP_OK)) {
-    return NO_ERROR;
-  }
-  else {
-    return ErrorModuleDoesntRespondToAT;
-  }
+int ESP8266::checkWifi() {
+  println(AT_CMD_AT);
+  if (expectResponse(AT_RESP_OK)) {return NO_ERROR;}
+  else {return ERROR_MODULE_DOESNT_RESPOND_TO_AT;}
 }
 
-int ESP8266::ConnectWiFi(String SSID, String PASS) {
-  String cmd = AT_CMD_JOIN_AP;
-  cmd += SSID;
-  cmd += "\",\"";
-  cmd += PASS;
-  cmd += "\"";
-  println(cmd);
-  return ExpectResponse(AT_RESP_OK);
+int ESP8266::connectWifi(String _SSID, String _pass) {
+  String _cmd = AT_CMD_JOIN_AP;
+  _cmd += _SSID;
+  _cmd += "\",\"";
+  _cmd += _pass;
+  _cmd += "\"";
+  println(_cmd);
+  return expectResponse(AT_RESP_OK);
 }
-int ESP8266::SetServer(String _Port) {
-	if (ConnectionMode("1") != NO_ERROR) {return ErrorConnectionMode;}
-	String cmd = AT_CMD_SERVER_MODE;
-	ServerPort = _Port;
-	cmd += "1,";
-	cmd += _Port;
-	println(cmd);
-	return ExpectResponse(AT_RESP_OK);
+int ESP8266::setServer(String _port) {
+	if (connectionMode("1") != NO_ERROR) {return ERROR_CONNECTION_MODE;}
+	String _cmd = AT_CMD_SERVER_MODE;
+	serverPort = _port;
+	_cmd += "1,";
+	_cmd += _port;
+	println(_cmd);
+	return expectResponse(AT_RESP_OK);
 }
 
 
-int ESP8266::ConnectionMode(String _Mux) {
-	String cmd = AT_CMD_CONNECTION_MODE;
-	cmd += _Mux;
-	println(cmd);
-	return ExpectResponse(AT_RESP_OK);
+int ESP8266::connectionMode(String _mux) {
+	String _cmd = AT_CMD_CONNECTION_MODE;
+	_cmd += _mux;
+	println(_cmd);
+	return expectResponse(AT_RESP_OK);
 }
 
-int ESP8266::WiFiMode(int _Mode) {
+int ESP8266::wifiMode(int _mode) {
 	print(AT_CMD_WIFI_MODE);
-	println(_Mode);
-	return ExpectResponse(AT_RESP_NO_CHANGE);
+	println(_mode);
+	return expectResponse(AT_RESP_NO_CHANGE);
 }
 
-String ESP8266::GetIP() {
+String ESP8266::getIP() {
 	String _cmd = AT_CMD_GET_IP;
 	String _msg="";
 	println(_cmd); // Get IP
-	_msg = ReadAll();
+	_msg = readAll();
 	IP = _msg.substring(11,_msg.length()-8);
 	return IP;
 }
 
-void ESP8266::SetCIPMODE(boolean Value) {
-  if (Value) {println(AT_CMD_CIPMODE_ON);}
+void ESP8266::setCIPMODE(boolean _value) {
+  if (_value) {println(AT_CMD_CIPMODE_ON);}
   else {println(AT_CMD_CIPMODE_OFF);}
 }
 
-int ESP8266::ExpectResponse(char* _Expected) {
+int ESP8266::expectResponse(char* _expected) {
 	String _received = "";
 	for (int i = 0; i < 10000; i++) {
-		_received = ReadAll();
+		_received = readAll();
 		if (_received != "") {
-			if (Contains(_received, _Expected))	return NO_ERROR;
+			if (contains(_received, _expected))	return NO_ERROR;
 		}
 		delay(1);
 	}
-	if (_received == "") return ErrorNoResponse;
-	else return ErrorResponseNotFound;
+	if (_received == "") return ERROR_NO_RESPONSE;
+	else return ERROR_RESPONSE_NOT_FOUND;
 }
 		
 
-String ESP8266::ReadAll() {
-  char _InChar;
+String ESP8266::readAll() {
+  char _inChar;
   String _response = "";
   while (available()) {
-    _InChar = read();
-    _response += _InChar;
+    _inChar = read();
+    _response += _inChar;
     delay(1);
   }
-  LastReceived = _response;
+  lastResponse = _response;
   return _response;
 }
 
-String ESP8266::ReadCmd() {
-	String _received = ReadAll();
+String ESP8266::readCmd() {
+	String _received = readAll();
 	if (_received != "") {
-		if (Contains(_received, AT_RESP_NO_CHANGE)) 	{return AT_RESP_NO_CHANGE;}
-		else if (Contains(_received, AT_RESP_LINK)) 	{return AT_RESP_LINK;}
-		else if (Contains(_received, AT_RESP_UNLINK)) 	{return AT_RESP_UNLINK;}
-		else if (Contains(_received, AT_RESP_IPD)) 	{
+		if (contains(_received, AT_RESP_NO_CHANGE)) 	{return AT_RESP_NO_CHANGE;}
+		else if (contains(_received, AT_RESP_LINK)) 	{return AT_RESP_LINK;}
+		else if (contains(_received, AT_RESP_UNLINK)) 	{return AT_RESP_UNLINK;}
+		else if (contains(_received, AT_RESP_IPD)) 	{
 			//FIND Channel, length and Msg
 			String _channel = _received.substring(_received.indexOf(',')+1);
 			String _length = _channel;
@@ -151,66 +154,55 @@ String ESP8266::ReadCmd() {
 		}
 		
 		else {
-			String _Unknown = "Unknown: " + _received;
-			return _Unknown;
-			}
+			String _unknown = "Unk: " + _received;
+			return _unknown;
+		}
 	}
 	return _received;
 }
 
-
-
-boolean ESP8266::Contains(String original, String search) {
-    int _searchLength = search.length();
-	int _max = original.length() - _searchLength;
+boolean ESP8266::contains(String _original, String _search) {
+    int _searchLength = _search.length();
+	int _max = _original.length() - _searchLength;
     for (int i = 0; i <= _max; i++) {
-        if (original.substring(i, i+_searchLength) == search) {return true;}
+        if (_original.substring(i, i + _searchLength) == _search) {return true;}
     }
     return false;
 } 
 
-int ESP8266::OpenTCP(String IP, String Port) {
-  String cmd = CIPSTART; 
-  cmd += IP;
-  cmd += "\",";
-  cmd += Port;
-  SendDebug(cmd);
-  if (!ExpectResponse(AT_RESP_LINK)) {
-    return ErrorUnableToLink;
+int ESP8266::openTCP(String _IP, String _port) {
+  String _cmd = AT_CMD_CIPSTART; 
+  _cmd += IP;
+  _cmd += "\",";
+  _cmd += _port;
+  println(_cmd);
+  if (!expectResponse(AT_RESP_LINK)) {
+    return ERROR_UNABLE_TO_LINK;
   }
   return NO_ERROR;
 }
 
-int ESP8266::CloseTCP() {
-  SendDebug(AT_CMD_CLOSE_CONNECTION);
-  if (!ExpectResponse(AT_RESP_UNLINK)) {
-	return ErrorUnableToUnlink;
+int ESP8266::closeTCP() {
+  println(AT_CMD_CLOSE_CONNECTION);
+  if (!expectResponse(AT_RESP_UNLINK)) {
+	return ERROR_UNABLE_TO_UNLINK;
 	}
 }
 
-int ESP8266::SendLongMessage(char* ExpectedReply) {
+int ESP8266::sendLongMessage(char* _expected) {
   print(AT_CMD_SEND);
-  println(_WiFiLongMessage.length());
+  println(wifiLongMessage.length());
   delay(200); 
-  print(_WiFiLongMessage);
-  if (ExpectResponse(ExpectedReply)) {
-    return NO_ERROR;
-    }
-  else {
-    return SendLongMessageError;
-    }
+  print(wifiLongMessage);
+  if (expectResponse(_expected)) {return NO_ERROR;}
+  else {return ERROR_SEND_LONG_MESSAGE;}
 }
 
-char* ESP8266::WiFiRead() {
-	char* _Received;
+char* ESP8266::wifiRead() {
+	char* _received;
 	while (available()) {
-		_Received += read();
+		_received += read();
 		delay(1);
     }
-	return _Received;
+	return _received;
 }  
-
-void ESP8266::SendDebug(String cmd) {
-  println(cmd);
-}
-

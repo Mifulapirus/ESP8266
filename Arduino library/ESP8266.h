@@ -4,32 +4,29 @@
   Released into the public domain.
 */
 
-
 #ifndef ESP8266_h
 #define ESP8266_h
 #include "Arduino.h"
 #include <SoftwareSerial.h>
 
-//Messages sent
-#define NO_ERROR	0
-
 //Error Table
-  #define ErrorUnableToLink             1
-  #define ErrorUnableToUnlink           2
-  #define SendLongMessageError          3  
-  #define ErrorModuleDoesntRespond      4
-  #define ErrorModuleDoesntRespondToAT  5
-  #define ErrorResponseNotFound         6
-  #define ErrorNoResponse				7
-  #define ErrorUnableToConnect          8
-  #define ErrorStringNotFound			9
-  #define ErrorRebooting				10
-  #define ErrorWifiMode					11
-  #define ErrorConnectionMode			12
-  
+#define NO_ERROR	0
+#define ERROR_UNABLE_TO_LINK				1
+#define ERROR_UNABLE_TO_UNLINK           	2
+#define ERROR_SEND_LONG_MESSAGE          	3  
+#define ERROR_MODULE_DOESNT_RESPOND			4
+#define ERROR_MODULE_DOESNT_RESPOND_TO_AT 	5
+#define ERROR_RESPONSE_NOT_FOUND         	6
+#define ERROR_NO_RESPONSE					7
+#define ERROR_UNABLE_TO_CONNECT          	8
+#define ERROR_REBOOTING						9
+#define ERROR_WIFI_MODE						10
+#define ERROR_CONNECTION_MODE				11
+
 //AT Commands
 #define AT_CMD_AT				"AT"
-#define CIPSTART       			"AT+CIPSTART=\"TCP\",\""
+#define AT_CMD_RST				"AT+RST"
+#define AT_CMD_CIPSTART       	"AT+CIPSTART=\"TCP\",\""
 #define AT_CMD_JOIN_AP			"AT+CWJAP=\""
 #define AT_CMD_SERVER_MODE 		"AT+CIPSERVER="
 #define AT_CMD_CONNECTION_MODE	"AT+CIPMUX="
@@ -49,43 +46,48 @@
 #define AT_RESP_OK     		"OK"
 #define AT_RESP_NO_CHANGE	"no change"
 
-
-
 class ESP8266 : public SoftwareSerial {
   public:
-    ESP8266(unsigned char RX_Pin, unsigned char TX_Pin, unsigned char RST_Pin, long Baud);
-    int CheckBaudrate();
-    int InitWiFi(String SSID, String PASS);
-    int WiFiReboot();
-    int WiFiReset();
-    int CheckWiFi();
-	int WiFiMode(int);
-	int SetServer(String);
-	int ConnectionMode(String);
-    int ConnectWiFi(String SSID, String PASS);
-    String GetIP();
-    void SetCIPMODE(boolean);
-    int ExpectResponse(char*);
-	String GetResponse(char*);
-	boolean Contains(String s, String search);
-    int OpenTCP(String, String);
-    int CloseTCP();
-    int SendLongMessage(char*);
-    char* WiFiRead();
-	String ReadAll();
-	String ReadCmd();
-    void WiFiEcho();
-    void SendDebug(String);
+    //Constructor
+	ESP8266(unsigned char _rxPin, unsigned char _txPin, unsigned char _rstPin, long _baud);
+    
+	//Public Functions
+	int checkBaudrate();
+    int initWifi(String, String);
+    int wifiReboot();
+    int wifiReset();
+    int checkWifi();
+	int wifiMode(int);
+	int setServer(String);
+	int connectionMode(String);
+    int connectWifi(String _SSID, String _pass);
+    String getIP();
+    void setCIPMODE(boolean);
+    int expectResponse(char*);
+	String getResponse(char*);
+	boolean contains(String _s, String _search);
+    int openTCP(String, String);
+    int closeTCP();
+    int sendLongMessage(char*);
+    char* wifiRead();
+	String readAll();
+	String readCmd();
+    void wifiEcho();
+    void sendDebug(String);
 	
-	String LastReceived;
+	//Private variables
+	String lastResponse;
 	String IP;
-	String ServerPort;
+	String serverPort;
 	 
 
   private:
-    int _RST_Pin;
-	String _WiFiLongMessage;
+	//Private Functions
 	
+	//Private Variables
+    int _rstPin;
+	String wifiLongMessage;
+	long _baudrates[13] = {300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 31250, 38400, 57600, 115200};
 };
 
 #endif
