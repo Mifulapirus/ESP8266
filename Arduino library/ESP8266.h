@@ -8,7 +8,7 @@
 #ifndef ESP8266_h
 #define ESP8266_h
 #include "Arduino.h"
-#include "SoftwareSerial.h"
+#include <SoftwareSerial.h>
 
 //Messages sent
 #define NO_ERROR	0
@@ -23,6 +23,9 @@
   #define ErrorNoResponse				7
   #define ErrorUnableToConnect          8
   #define ErrorStringNotFound			9
+  #define ErrorRebooting				10
+  #define ErrorWifiMode					11
+  #define ErrorConnectionMode			12
   
 //AT Commands
 #define AT_CMD_AT				"AT"
@@ -47,16 +50,17 @@
 #define AT_RESP_NO_CHANGE	"no change"
 
 
+
 class ESP8266 : public SoftwareSerial {
   public:
-    ESP8266(unsigned char RX_Pin, unsigned char TX_Pin, unsigned char RST_Pin);
+    ESP8266(unsigned char RX_Pin, unsigned char TX_Pin, unsigned char RST_Pin, long Baud);
     int CheckBaudrate();
     int InitWiFi(String SSID, String PASS);
     int WiFiReboot();
     int WiFiReset();
     int CheckWiFi();
 	int WiFiMode(int);
-	int ServerMode(String);
+	int SetServer(String);
 	int ConnectionMode(String);
     int ConnectWiFi(String SSID, String PASS);
     String GetIP();
@@ -75,11 +79,13 @@ class ESP8266 : public SoftwareSerial {
 	
 	String LastReceived;
 	String IP;
+	String ServerPort;
 	 
 
   private:
     int _RST_Pin;
 	String _WiFiLongMessage;
+	
 };
 
 #endif

@@ -4,13 +4,13 @@
   Released into the public domain.
 */
 
-#include "SoftwareSerial.h"
+#include <SoftwareSerial.h>
 #include "ESP8266.h"
 
 
 // Contstructor
-ESP8266::ESP8266(unsigned char RX_Pin, unsigned char TX_Pin, unsigned char RST_Pin) : SoftwareSerial(RX_Pin, TX_Pin) {
-	begin(9600);
+ESP8266::ESP8266(unsigned char RX_Pin, unsigned char TX_Pin, unsigned char RST_Pin, long Baud) : SoftwareSerial(RX_Pin, TX_Pin) {
+	begin(Baud);
 	_RST_Pin = RST_Pin;
 	IP="0.0.0.0";
 	pinMode(_RST_Pin, OUTPUT);
@@ -31,11 +31,10 @@ int ESP8266::CheckBaudrate() {
 }
   
 int ESP8266::InitWiFi(String SSID, String PASS) {
-  while (!WiFiReboot())  {}
-  WiFiMode(1);
-  //while (!CheckWiFi())   {}
-  while (!ConnectWiFi(SSID, PASS)) {}
-  SetCIPMODE(false);
+  if (WiFiReboot() != NO_ERROR) 			{return ErrorRebooting;}
+  if (WiFiMode(1) != NO_ERROR)				{return ErrorWifiMode;}
+  if (ConnectWiFi(SSID, PASS) != NO_ERROR) 	{return ErrorUnableToConnect;}
+  GetIP();
   return NO_ERROR;
 }
 
@@ -71,8 +70,10 @@ int ESP8266::ConnectWiFi(String SSID, String PASS) {
   println(cmd);
   return ExpectResponse(AT_RESP_OK);
 }
-int ESP8266::ServerMode(String _Port) {
+int ESP8266::SetServer(String _Port) {
+	if (ConnectionMode("1") != NO_ERROR) {return ErrorConnectionMode;}
 	String cmd = AT_CMD_SERVER_MODE;
+	ServerPort = _Port;
 	cmd += "1,";
 	cmd += _Port;
 	println(cmd);
