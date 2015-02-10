@@ -17,9 +17,10 @@
 #include "ESP8266.h"
 
 // Contstructor
-ESP8266::ESP8266(unsigned char _rxPin, unsigned char _txPin, unsigned char _rstPin, long _baud) : SoftwareSerial(_rxPin, _txPin) {
+ESP8266::ESP8266(unsigned char _rxPin, unsigned char _txPin, unsigned char _rstPin, int _baud) : SoftwareSerial(_rxPin, _txPin) {
 	begin(_baud);
-	_rstPin = _rstPin;
+	listen();
+	rstPin = _rstPin;
 	IP="0.0.0.0";
 	pinMode(_rstPin, OUTPUT);
 }
@@ -28,31 +29,31 @@ int ESP8266::checkBaudrate() {
   
   for (int i=0; i<13; i++) {
     begin(_baudrates[i]);
-    digitalWrite(_rstPin, LOW);
+    digitalWrite(rstPin, LOW);
     delay(_pause);
-    digitalWrite(_rstPin, HIGH);
+    digitalWrite(rstPin, HIGH);
     delay(_pause);
     wifiRead();
     delay(_pause);
   }
 }
   
-int ESP8266::initWifi(String _SSID, String _pass) {
-  if (wifiReboot() != NO_ERROR) {return ERROR_REBOOTING;}
+int ESP8266::init(String _SSID, String _pass) {
+  if (reboot() != NO_ERROR) {return ERROR_REBOOTING;}
   if (wifiMode(1) != NO_ERROR)	{return ERROR_WIFI_MODE;}
-  if (connectWifi(_SSID, _pass) != NO_ERROR) {return ERROR_UNABLE_TO_CONNECT;}
+  if (connect(_SSID, _pass) != NO_ERROR) {return ERROR_UNABLE_TO_CONNECT;}
   getIP();
   return NO_ERROR;
 }
 
-int ESP8266::wifiReboot() {
-  digitalWrite(_rstPin, LOW);
+int ESP8266::reboot() {
+  digitalWrite(rstPin, LOW);
   delay(500);
-  digitalWrite(_rstPin, HIGH);
+  digitalWrite(rstPin, HIGH);
   return expectResponse(AT_RESP_READY);
 }
 
-int ESP8266::wifiReset() {
+int ESP8266::reset() {
   flush();
   println(AT_CMD_RST); // restet and test if module is redy
   return expectResponse(AT_RESP_READY);
@@ -64,7 +65,7 @@ int ESP8266::checkWifi() {
   else {return ERROR_MODULE_DOESNT_RESPOND_TO_AT;}
 }
 
-int ESP8266::connectWifi(String _SSID, String _pass) {
+int ESP8266::connect(String _SSID, String _pass) {
   String _cmd = AT_CMD_JOIN_AP;
   _cmd += _SSID;
   _cmd += "\",\"";

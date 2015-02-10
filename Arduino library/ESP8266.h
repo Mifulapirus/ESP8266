@@ -49,18 +49,18 @@
 class ESP8266 : public SoftwareSerial {
   public:
     //Constructor
-	ESP8266(unsigned char _rxPin, unsigned char _txPin, unsigned char _rstPin, long _baud);
+	ESP8266(unsigned char _rxPin, unsigned char _txPin, unsigned char _rstPin, int _baud);
     
 	//Public Functions
 	int checkBaudrate();
-    int initWifi(String, String);
-    int wifiReboot();
-    int wifiReset();
+    int init(String, String);
+    int reboot();
+    int reset();
     int checkWifi();
 	int wifiMode(int);
 	int setServer(String);
 	int connectionMode(String);
-    int connectWifi(String _SSID, String _pass);
+    int connect(String _SSID, String _pass);
     String getIP();
     void setCIPMODE(boolean);
     int expectResponse(char*);
@@ -85,7 +85,7 @@ class ESP8266 : public SoftwareSerial {
 	//Private Functions
 	
 	//Private Variables
-    int _rstPin;
+    int rstPin;
 	String wifiLongMessage;
 	long _baudrates[13] = {300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 31250, 38400, 57600, 115200};
 };
