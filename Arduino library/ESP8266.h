@@ -62,7 +62,7 @@ class ESP8266 : public SoftwareSerial {
 	int connectionMode(String);
     int connect(String _SSID, String _pass);
     String getIP();
-    void setCIPMODE(boolean);
+    void setTxMode(boolean);
     int expectResponse(char*);
 	String getResponse(char*);
 	boolean contains(String _s, String _search);
@@ -79,6 +79,7 @@ class ESP8266 : public SoftwareSerial {
 	String lastResponse;
 	String IP;
 	String serverPort;
+	long responseTimeOut = 10000;
 	 
 
   private:
@@ -87,7 +88,8 @@ class ESP8266 : public SoftwareSerial {
 	//Private Variables
     int rstPin;
 	String wifiLongMessage;
-	long _baudrates[13] = {300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 31250, 38400, 57600, 115200};
+	int _baudrates[13] = {300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 31250, 38400, 57600, 115200};
+	int _baud; 
 };
 
 #endif
