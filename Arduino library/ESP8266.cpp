@@ -26,7 +26,7 @@
 ********************************************************************/
 ESP8266::ESP8266(unsigned char _rxPin, unsigned char _txPin, unsigned char _rstPin, int _initBaud) : SoftwareSerial(_rxPin, _txPin) {
 	_baud = _initBaud;
-	//wifiLongMessage.reserve(400);
+	wifiLongMessage.reserve(400);
 	begin(_baud);		//Open software serial port
 	listen();			//Makes it the listening device
 	rstPin = _rstPin;
