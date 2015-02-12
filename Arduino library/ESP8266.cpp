@@ -26,6 +26,7 @@
 ********************************************************************/
 ESP8266::ESP8266(unsigned char _rxPin, unsigned char _txPin, unsigned char _rstPin, int _initBaud) : SoftwareSerial(_rxPin, _txPin) {
 	_baud = _initBaud;
+	//wifiLongMessage.reserve(400);
 	begin(_baud);		//Open software serial port
 	listen();			//Makes it the listening device
 	rstPin = _rstPin;
@@ -268,11 +269,11 @@ boolean ESP8266::contains(String _original, String _search) {
 ********************************************************************/
 int ESP8266::openTCP(String _IP, String _port) {
   String _cmd = AT_CMD_CIPSTART; 
-  _cmd += IP;
+  _cmd += _IP;
   _cmd += "\",";
   _cmd += _port;
   println(_cmd);
-  if (!expectResponse(AT_RESP_LINK)) {return ERROR_UNABLE_TO_LINK;}
+  if (expectResponse(AT_RESP_LINK) != NO_ERROR) {return ERROR_UNABLE_TO_LINK;}
   return NO_ERROR;
 }
 
@@ -282,9 +283,8 @@ int ESP8266::openTCP(String _IP, String _port) {
 ********************************************************************/
 int ESP8266::closeTCP() {
   println(AT_CMD_CLOSE_CONNECTION);
-  if (!expectResponse(AT_RESP_UNLINK)) {
-	return ERROR_UNABLE_TO_UNLINK;
-	}
+  if (expectResponse(AT_RESP_UNLINK) != NO_ERROR) {return ERROR_UNABLE_TO_UNLINK;}
+  return NO_ERROR;
 }
 
 /*******************************************************************
@@ -298,6 +298,6 @@ int ESP8266::sendLongMessage(char* _expected) {
   println(wifiLongMessage.length());
   delay(200); 
   print(wifiLongMessage);
-  if (expectResponse(_expected)) {return NO_ERROR;}
+  if (expectResponse(_expected) == NO_ERROR) {return NO_ERROR;}
   else {return ERROR_SEND_LONG_MESSAGE;}
 }

@@ -33,7 +33,7 @@
 #define AT_CMD_WIFI_MODE		"AT+CWMODE="
 #define AT_CMD_GET_IP			"AT+CIFSR"
 #define AT_CMD_CIPMODE_ON		"AT+CIPMODE=1"
-#define AT_CMD_CIPMODE_OFF		"AT+CIPMODE=1"
+#define AT_CMD_CIPMODE_OFF		"AT+CIPMODE=0"
 #define AT_CMD_CLOSE_CONNECTION	"AT+CIPCLOSE"
 #define AT_CMD_SEND				"AT+CIPSEND="
 
@@ -80,14 +80,13 @@ class ESP8266 : public SoftwareSerial {
 	String IP;
 	String serverPort;
 	long responseTimeOut = 10000;
-	 
+	String wifiLongMessage;
 
   private:
 	//Private Functions
 	
 	//Private Variables
     int rstPin;
-	String wifiLongMessage;
 	int _baudrates[13] = {300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 31250, 38400, 57600, 115200};
 	int _baud; 
 };
