@@ -26,7 +26,7 @@
 ********************************************************************/
 ESP8266::ESP8266(unsigned char _rxPin, unsigned char _txPin, unsigned char _rstPin, int _initBaud) : SoftwareSerial(_rxPin, _txPin) {
 	_baud = _initBaud;
-	wifiLongMessage.reserve(400);
+	//lastResponse.reserve(300);
 	begin(_baud);		//Open software serial port
 	listen();			//Makes it the listening device
 	rstPin = _rstPin;
@@ -39,7 +39,7 @@ ESP8266::ESP8266(unsigned char _rxPin, unsigned char _txPin, unsigned char _rstP
 * Checks all available baudrates and exits when the ESP8266 answers 
 * with the "Ready" command. 
 ********************************************************************/
-int ESP8266::checkBaudrate() {
+byte ESP8266::checkBaudrate() {
   int _pause=500;
   //Check baudrates and expects for the Ready command
   for (int i=0; i<13; i++) {
@@ -55,7 +55,7 @@ int ESP8266::checkBaudrate() {
 * error, it will exit with the proper error code (see table on 
 * the ESP8266.h file)
 ********************************************************************/
-int ESP8266::init(String _SSID, String _pass) {
+byte ESP8266::init(String _SSID, String _pass) {
   if (reboot() != NO_ERROR) {return ERROR_REBOOTING;}	
   if (wifiMode(1) != NO_ERROR)	{return ERROR_WIFI_MODE;} 
   if (connect(_SSID, _pass) != NO_ERROR) {return ERROR_UNABLE_TO_CONNECT;}
@@ -69,9 +69,9 @@ int ESP8266::init(String _SSID, String _pass) {
 * pin to some pin on your micro-controller and provide it as an 
 * argument on the constructor
 ********************************************************************/
-int ESP8266::reboot() {
+byte ESP8266::reboot() {
   digitalWrite(rstPin, LOW);
-  delay(500);
+  delay(50);
   digitalWrite(rstPin, HIGH);
   return expectResponse(AT_RESP_READY);
 }
@@ -82,7 +82,7 @@ int ESP8266::reboot() {
 * ESP8266 is not responding to any command, in which case, a reboot() 
 * would be required
 ********************************************************************/
-int ESP8266::reset() {
+byte ESP8266::reset() {
   flush();
   println(AT_CMD_RST); // restet and test if module is ready
   return expectResponse(AT_RESP_READY);
@@ -93,7 +93,7 @@ int ESP8266::reset() {
 * Simply sends the "AT" command and expects the "OK" response in 
 * in order to make sure the module is working fine.
 ********************************************************************/
-int ESP8266::checkWifi() {
+byte ESP8266::checkWifi() {
   println(AT_CMD_AT);
   if (expectResponse(AT_RESP_OK)) {return NO_ERROR;}
   else {return ERROR_MODULE_DOESNT_RESPOND_TO_AT;}
@@ -105,7 +105,7 @@ int ESP8266::checkWifi() {
 * module to be connected.
 * You must provide the correct WiFi SSID (Name) and Password
 ********************************************************************/
-int ESP8266::connect(String _SSID, String _pass) {
+byte ESP8266::connect(String _SSID, String _pass) {
   String _cmd = AT_CMD_JOIN_AP;
   _cmd += _SSID;
   _cmd += "\",\"";
@@ -121,8 +121,8 @@ int ESP8266::connect(String _SSID, String _pass) {
 * moment on, it will be possible to talk to the module on that port
 * by opening a TCP connection on its IP (You can use Putty to do so)
 ********************************************************************/
-int ESP8266::setServer(String _port) {
-	if (connectionMode("1") != NO_ERROR) {return ERROR_CONNECTION_MODE;}
+byte ESP8266::setServer(String _port) {
+	if (connectionMode(AT_TRUE) != NO_ERROR) {return ERROR_CONNECTION_MODE;}
 	String _cmd = AT_CMD_SERVER_MODE;
 	serverPort = _port;
 	_cmd += "1,";
@@ -132,9 +132,20 @@ int ESP8266::setServer(String _port) {
 }
 
 /*******************************************************************
+* CLOSE THE SERVER MODE
+********************************************************************/
+byte ESP8266::closeServer() {
+	if (connectionMode(AT_TRUE) != NO_ERROR) {return ERROR_CONNECTION_MODE;}
+	String _cmd = AT_CMD_SERVER_MODE;
+	_cmd += "0";
+	println(_cmd);
+	return expectResponse(AT_RESP_OK);
+}
+
+/*******************************************************************
 * CONNECTION MODE
 ********************************************************************/
-int ESP8266::connectionMode(String _mux) {
+byte ESP8266::connectionMode(String _mux) {
 	String _cmd = AT_CMD_CONNECTION_MODE;
 	_cmd += _mux;
 	println(_cmd);
@@ -148,7 +159,7 @@ int ESP8266::connectionMode(String _mux) {
 * Most of the time you will use it just in STA mode so it connects to 
 * your WiFi as any other device.
 ********************************************************************/
-int ESP8266::wifiMode(int _mode) {
+byte ESP8266::wifiMode(int _mode) {
 	print(AT_CMD_WIFI_MODE);
 	println(_mode);
 	return expectResponse(AT_RESP_NO_CHANGE);
@@ -185,16 +196,16 @@ void ESP8266::setTxMode(boolean _value) {
 * specified responseTimeOut, the function will return with a 
 * ERROR_NO_RESPONSE or ERROR_RESPONSE_NOT_FOUND
 ********************************************************************/
-int ESP8266::expectResponse(char* _expected) {
-	String _received = "";
+byte ESP8266::expectResponse(char* _expected) {
+	String _received = AT_EMPTY_STRING;
 	for (int i = 0; i < responseTimeOut; i++) {
 		_received = readAll();
-		if (_received != "") {
+		if (_received != AT_EMPTY_STRING) {
 			if (contains(_received, _expected))	return NO_ERROR;
 		}
 		delay(1);
 	}
-	if (_received == "") return ERROR_NO_RESPONSE;
+	if (_received == AT_EMPTY_STRING) return ERROR_NO_RESPONSE;
 	else return ERROR_RESPONSE_NOT_FOUND;
 }
 		
@@ -205,14 +216,15 @@ int ESP8266::expectResponse(char* _expected) {
 ********************************************************************/
 String ESP8266::readAll() {
   char _inChar;
-  String _response = "";
+  //String _response = "";
+  lastResponse = AT_EMPTY_STRING;
   while (available()) {
     _inChar = read();
-    _response += _inChar;
+    lastResponse += _inChar;
     delay(1);
   }
-  lastResponse = _response;
-  return _response;
+  //lastResponse = _response;
+  return lastResponse;
 }
 
 /*******************************************************************
@@ -225,7 +237,7 @@ String ESP8266::readAll() {
 ********************************************************************/
 String ESP8266::readCmd() {
 	String _received = readAll();
-	if (_received != "") {
+	if (_received != AT_EMPTY_STRING) {
 		if (contains(_received, AT_RESP_NO_CHANGE)) 	{return AT_RESP_NO_CHANGE;}
 		else if (contains(_received, AT_RESP_LINK)) 	{return AT_RESP_LINK;}
 		else if (contains(_received, AT_RESP_UNLINK)) 	{return AT_RESP_UNLINK;}
@@ -267,21 +279,26 @@ boolean ESP8266::contains(String _original, String _search) {
 * provided. 
 //TODO: Implement the send function
 ********************************************************************/
-int ESP8266::openTCP(String _IP, String _port) {
-  String _cmd = AT_CMD_CIPSTART; 
-  _cmd += _IP;
-  _cmd += "\",";
-  _cmd += _port;
-  println(_cmd);
-  if (expectResponse(AT_RESP_LINK) != NO_ERROR) {return ERROR_UNABLE_TO_LINK;}
-  return NO_ERROR;
+byte ESP8266::openTCP(String _IP, String _port, boolean _waitResponse) {
+	String _cmd = AT_CMD_CIPSTART; 
+	_cmd += _IP;
+	_cmd += "\",";
+	_cmd += _port;
+	println(_cmd);
+	if (_waitResponse) {
+		delay(200);
+		if (expectResponse(AT_RESP_LINK) != NO_ERROR) {return ERROR_UNABLE_TO_LINK;}
+		return NO_ERROR;
+	}
+	else {return NO_ERROR;}
 }
+
 
 /*******************************************************************
 * CLOSE TCP CONNECTION
 * Closes a TCP connection.
 ********************************************************************/
-int ESP8266::closeTCP() {
+byte ESP8266::closeTCP() {
   println(AT_CMD_CLOSE_CONNECTION);
   if (expectResponse(AT_RESP_UNLINK) != NO_ERROR) {return ERROR_UNABLE_TO_UNLINK;}
   return NO_ERROR;
@@ -293,11 +310,14 @@ int ESP8266::closeTCP() {
 //TODO: This needs a lot of improvement, it is only useful to 
 * abstract the user from the pointer
 ********************************************************************/
-int ESP8266::sendLongMessage(char* _expected) {
-  print(AT_CMD_SEND);
-  println(wifiLongMessage.length());
-  delay(200); 
-  print(wifiLongMessage);
-  if (expectResponse(_expected) == NO_ERROR) {return NO_ERROR;}
-  else {return ERROR_SEND_LONG_MESSAGE;}
+byte ESP8266::sendLongMessage(char* _expected, boolean _waitResponse) {
+	print(AT_CMD_SEND);
+	println(wifiLongMessage.length());
+	delay(200); 
+	print(wifiLongMessage);
+	if (_waitResponse) {
+		if (expectResponse(_expected) == NO_ERROR) {return NO_ERROR;}
+		else {return ERROR_SEND_LONG_MESSAGE;}
+	}
+	else {return NO_ERROR;}
 }

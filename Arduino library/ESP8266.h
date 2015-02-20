@@ -22,6 +22,7 @@
 #define ERROR_REBOOTING						9
 #define ERROR_WIFI_MODE						10
 #define ERROR_CONNECTION_MODE				11
+#define ERROR_NOT_AT_OK						12
 
 //AT Commands
 #define AT_CMD_AT				"AT"
@@ -44,31 +45,36 @@
 #define AT_RESP_LINK		"Link"
 #define AT_RESP_UNLINK		"Unlink"
 #define AT_RESP_OK     		"OK"
+#define AT_RESP_SEND_OK		"SEND OK"
 #define AT_RESP_NO_CHANGE	"no change"
+#define AT_EMPTY_STRING		""
+#define AT_TRUE				"1"
+#define AT_FALSE			"0"
 
 class ESP8266 : public SoftwareSerial {
   public:
     //Constructor
-	ESP8266(unsigned char _rxPin, unsigned char _txPin, unsigned char _rstPin, int _baud);
+	ESP8266(byte _rxPin, byte _txPin, byte _rstPin, int _baud);
     
 	//Public Functions
-	int checkBaudrate();
-    int init(String, String);
-    int reboot();
-    int reset();
-    int checkWifi();
-	int wifiMode(int);
-	int setServer(String);
-	int connectionMode(String);
-    int connect(String _SSID, String _pass);
+	byte checkBaudrate();
+    byte init(String, String);
+    byte reboot();
+    byte reset();
+    byte checkWifi();
+	byte wifiMode(int);
+	byte setServer(String);
+	byte closeServer();
+	byte connectionMode(String);
+    byte connect(String _SSID, String _pass);
     String getIP();
     void setTxMode(boolean);
-    int expectResponse(char*);
+    byte expectResponse(char*);
 	String getResponse(char*);
 	boolean contains(String _s, String _search);
-    int openTCP(String, String);
-    int closeTCP();
-    int sendLongMessage(char*);
+    byte openTCP(String, String, boolean _waitResponse = true);
+    byte closeTCP();
+    byte sendLongMessage(char*, boolean _waitResponse = true);
     char* wifiRead();
 	String readAll();
 	String readCmd();
@@ -86,7 +92,7 @@ class ESP8266 : public SoftwareSerial {
 	//Private Functions
 	
 	//Private Variables
-    int rstPin;
+    byte rstPin;
 	int _baudrates[13] = {300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 31250, 38400, 57600, 115200};
 	int _baud; 
 };
