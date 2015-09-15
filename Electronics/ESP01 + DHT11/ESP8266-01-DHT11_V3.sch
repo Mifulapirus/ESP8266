@@ -6,7 +6,7 @@
 <setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="0.025" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
+<grid distance="0.05" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="1" visible="no" active="no"/>
 <layer number="2" name="Route2" color="1" fill="3" visible="no" active="no"/>
@@ -879,20 +879,20 @@ DIN A5, landscape with doc field</description>
 </class>
 </classes>
 <parts>
-<part name="U$1" library="esp8266modules" deviceset="ESP-01" device=""/>
-<part name="IC1" library="v-reg-2" deviceset="LM1117" device=""/>
+<part name="ESP8266-01" library="esp8266modules" deviceset="ESP-01" device=""/>
+<part name="AMS1117" library="v-reg-2" deviceset="LM1117" device=""/>
 <part name="GND1" library="supply1" deviceset="GND" device=""/>
 <part name="GND2" library="supply1" deviceset="GND" device=""/>
 <part name="+3V1" library="supply1" deviceset="+3V3" device=""/>
 <part name="+3V2" library="supply1" deviceset="+3V3" device=""/>
-<part name="JP1" library="jumper" deviceset="JP1E" device=""/>
+<part name="PROG" library="jumper" deviceset="JP1E" device=""/>
 <part name="GND3" library="supply1" deviceset="GND" device=""/>
-<part name="J1" library="con-molex" deviceset="22-?-03" device="27-2031"/>
+<part name="SERIAL" library="con-molex" deviceset="22-?-03" device="27-2031"/>
 <part name="GND4" library="supply1" deviceset="GND" device=""/>
 <part name="U$2" library="DHT11" deviceset="DHT11-PION." device=""/>
 <part name="+3V3" library="supply1" deviceset="+3V3" device=""/>
 <part name="GND5" library="supply1" deviceset="GND" device=""/>
-<part name="J2" library="con-molex" deviceset="22-?-02" device="27-2021"/>
+<part name="VIN" library="con-molex" deviceset="22-?-02" device="27-2021"/>
 <part name="GND6" library="supply1" deviceset="GND" device=""/>
 <part name="FRAME1" library="frames" deviceset="DINA5_L" device=""/>
 </parts>
@@ -907,25 +907,42 @@ DIN A5, landscape with doc field</description>
 <wire x1="3.81" y1="116.84" x2="180.34" y2="116.84" width="0.1524" layer="94"/>
 <wire x1="180.34" y1="116.84" x2="180.34" y2="115.57" width="0.1524" layer="94"/>
 <wire x1="3.81" y1="55.245" x2="85.09" y2="55.245" width="0.1524" layer="94"/>
+<text x="93.98" y="17.78" size="2.54" layer="94">Author: Angel Hernandez</text>
+<text x="104.14" y="12.7" size="2.54" layer="94">@mifulapirus</text>
+<text x="99.06" y="5.08" size="2.54" layer="94">www.tupperbot.com</text>
 </plain>
 <instances>
-<instance part="U$1" gate="G$1" x="86.36" y="83.82" rot="R180"/>
-<instance part="IC1" gate="G$1" x="50.8" y="38.1"/>
+<instance part="ESP8266-01" gate="G$1" x="86.36" y="83.82" smashed="yes" rot="R180">
+<attribute name="NAME" x="93.98" y="88.9" size="1.778" layer="95" rot="R180"/>
+</instance>
+<instance part="AMS1117" gate="G$1" x="50.8" y="38.1" smashed="yes">
+<attribute name="NAME" x="45.72" y="41.91" size="1.778" layer="95"/>
+<attribute name="VALUE" x="53.34" y="27.94" size="1.778" layer="96"/>
+</instance>
 <instance part="GND1" gate="1" x="50.8" y="25.4"/>
 <instance part="GND2" gate="1" x="106.68" y="68.58"/>
 <instance part="+3V1" gate="G$1" x="63.5" y="45.72"/>
 <instance part="+3V2" gate="G$1" x="68.58" y="91.44"/>
-<instance part="JP1" gate="A" x="116.84" y="83.82"/>
+<instance part="PROG" gate="A" x="116.84" y="83.82" smashed="yes">
+<attribute name="NAME" x="121.92" y="88.9" size="1.778" layer="95" rot="R180"/>
+<attribute name="VALUE" x="122.555" y="83.82" size="1.778" layer="96" rot="R90"/>
+</instance>
 <instance part="GND3" gate="1" x="119.38" y="68.58"/>
-<instance part="J1" gate="-1" x="139.7" y="104.14"/>
-<instance part="J1" gate="-2" x="139.7" y="101.6"/>
-<instance part="J1" gate="-3" x="139.7" y="99.06"/>
-<instance part="GND4" gate="1" x="132.08" y="68.58"/>
+<instance part="SERIAL" gate="-1" x="139.7" y="109.22" smashed="yes">
+<attribute name="NAME" x="142.24" y="108.458" size="1.524" layer="95"/>
+</instance>
+<instance part="SERIAL" gate="-2" x="139.7" y="104.14" smashed="yes">
+<attribute name="NAME" x="142.24" y="103.378" size="1.524" layer="95"/>
+</instance>
+<instance part="SERIAL" gate="-3" x="139.7" y="99.06"/>
+<instance part="GND4" gate="1" x="127" y="68.58"/>
 <instance part="U$2" gate="G$1" x="114.3" y="38.1" rot="R180"/>
 <instance part="+3V3" gate="G$1" x="124.46" y="58.42"/>
 <instance part="GND5" gate="1" x="99.06" y="40.64"/>
-<instance part="J2" gate="-1" x="27.94" y="38.1" rot="MR0"/>
-<instance part="J2" gate="-2" x="27.94" y="33.02" rot="MR0"/>
+<instance part="VIN" gate="-1" x="27.94" y="38.1" smashed="yes" rot="MR0">
+<attribute name="NAME" x="25.4" y="37.338" size="1.524" layer="95" rot="MR0"/>
+</instance>
+<instance part="VIN" gate="-2" x="27.94" y="33.02" rot="MR0"/>
 <instance part="GND6" gate="1" x="35.56" y="25.4"/>
 <instance part="FRAME1" gate="G$1" x="0" y="0"/>
 </instances>
@@ -935,52 +952,55 @@ DIN A5, landscape with doc field</description>
 <net name="GND" class="0">
 <segment>
 <pinref part="GND1" gate="1" pin="GND"/>
-<pinref part="IC1" gate="G$1" pin="GND"/>
+<pinref part="AMS1117" gate="G$1" pin="GND"/>
 <wire x1="50.8" y1="27.94" x2="50.8" y2="30.48" width="0.1524" layer="91"/>
 </segment>
 <segment>
-<pinref part="U$1" gate="G$1" pin="GND"/>
+<pinref part="ESP8266-01" gate="G$1" pin="GND"/>
 <pinref part="GND2" gate="1" pin="GND"/>
 <wire x1="104.14" y1="76.2" x2="106.68" y2="76.2" width="0.1524" layer="91"/>
 <wire x1="106.68" y1="76.2" x2="106.68" y2="71.12" width="0.1524" layer="91"/>
 </segment>
 <segment>
-<pinref part="JP1" gate="A" pin="2"/>
+<pinref part="PROG" gate="A" pin="2"/>
 <pinref part="GND3" gate="1" pin="GND"/>
 <wire x1="119.38" y1="81.28" x2="119.38" y2="71.12" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <pinref part="GND4" gate="1" pin="GND"/>
-<pinref part="J1" gate="-3" pin="S"/>
-<wire x1="132.08" y1="71.12" x2="132.08" y2="99.06" width="0.1524" layer="91"/>
-<wire x1="132.08" y1="99.06" x2="137.16" y2="99.06" width="0.1524" layer="91"/>
+<pinref part="SERIAL" gate="-3" pin="S"/>
+<wire x1="127" y1="71.12" x2="127" y2="99.06" width="0.1524" layer="91"/>
+<wire x1="127" y1="99.06" x2="137.16" y2="99.06" width="0.1524" layer="91"/>
+<label x="129.54" y="99.06" size="2.54" layer="95"/>
 </segment>
 <segment>
-<pinref part="U$2" gate="G$1" pin="GND"/>
 <pinref part="GND5" gate="1" pin="GND"/>
-<wire x1="109.22" y1="50.8" x2="99.06" y2="50.8" width="0.1524" layer="91"/>
-<wire x1="99.06" y1="50.8" x2="99.06" y2="43.18" width="0.1524" layer="91"/>
+<wire x1="99.06" y1="55.88" x2="99.06" y2="43.18" width="0.1524" layer="91"/>
+<pinref part="U$2" gate="G$1" pin="GND"/>
+<wire x1="99.06" y1="55.88" x2="109.22" y2="55.88" width="0.1524" layer="91"/>
+<wire x1="109.22" y1="55.88" x2="109.22" y2="50.8" width="0.1524" layer="91"/>
 </segment>
 <segment>
-<pinref part="J2" gate="-2" pin="S"/>
+<pinref part="VIN" gate="-2" pin="S"/>
 <pinref part="GND6" gate="1" pin="GND"/>
 <wire x1="30.48" y1="33.02" x2="35.56" y2="33.02" width="0.1524" layer="91"/>
 <wire x1="35.56" y1="33.02" x2="35.56" y2="27.94" width="0.1524" layer="91"/>
+<label x="29.21" y="33.02" size="2.54" layer="95"/>
 </segment>
 </net>
 <net name="+3V3" class="0">
 <segment>
-<pinref part="IC1" gate="G$1" pin="OUT"/>
+<pinref part="AMS1117" gate="G$1" pin="OUT"/>
 <pinref part="+3V1" gate="G$1" pin="+3V3"/>
 <wire x1="58.42" y1="38.1" x2="63.5" y2="38.1" width="0.1524" layer="91"/>
 <wire x1="63.5" y1="38.1" x2="63.5" y2="43.18" width="0.1524" layer="91"/>
 </segment>
 <segment>
-<pinref part="U$1" gate="G$1" pin="VCC"/>
+<pinref part="ESP8266-01" gate="G$1" pin="VCC"/>
 <pinref part="+3V2" gate="G$1" pin="+3V3"/>
 <wire x1="71.12" y1="83.82" x2="68.58" y2="83.82" width="0.1524" layer="91"/>
 <wire x1="68.58" y1="83.82" x2="68.58" y2="88.9" width="0.1524" layer="91"/>
-<pinref part="U$1" gate="G$1" pin="CH_PD"/>
+<pinref part="ESP8266-01" gate="G$1" pin="CH_PD"/>
 <wire x1="71.12" y1="78.74" x2="68.58" y2="78.74" width="0.1524" layer="91"/>
 <wire x1="68.58" y1="78.74" x2="68.58" y2="83.82" width="0.1524" layer="91"/>
 <junction x="68.58" y="83.82"/>
@@ -994,42 +1014,45 @@ DIN A5, landscape with doc field</description>
 </net>
 <net name="N$1" class="0">
 <segment>
-<pinref part="U$1" gate="G$1" pin="GPIO0"/>
-<pinref part="JP1" gate="A" pin="1"/>
+<pinref part="ESP8266-01" gate="G$1" pin="GPIO0"/>
+<pinref part="PROG" gate="A" pin="1"/>
 <wire x1="104.14" y1="81.28" x2="116.84" y2="81.28" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$2" class="0">
+<net name="RX" class="0">
 <segment>
-<pinref part="J1" gate="-2" pin="S"/>
-<wire x1="137.16" y1="101.6" x2="111.76" y2="101.6" width="0.1524" layer="91"/>
-<wire x1="111.76" y1="101.6" x2="111.76" y2="83.82" width="0.1524" layer="91"/>
-<pinref part="U$1" gate="G$1" pin="RXD"/>
+<pinref part="SERIAL" gate="-2" pin="S"/>
+<wire x1="137.16" y1="104.14" x2="111.76" y2="104.14" width="0.1524" layer="91"/>
+<wire x1="111.76" y1="104.14" x2="111.76" y2="83.82" width="0.1524" layer="91"/>
+<pinref part="ESP8266-01" gate="G$1" pin="RXD"/>
 <wire x1="111.76" y1="83.82" x2="104.14" y2="83.82" width="0.1524" layer="91"/>
+<label x="129.54" y="104.14" size="2.54" layer="95"/>
 </segment>
 </net>
-<net name="N$3" class="0">
+<net name="TX" class="0">
 <segment>
-<pinref part="J1" gate="-1" pin="S"/>
-<wire x1="137.16" y1="104.14" x2="60.96" y2="104.14" width="0.1524" layer="91"/>
-<wire x1="60.96" y1="104.14" x2="60.96" y2="76.2" width="0.1524" layer="91"/>
-<pinref part="U$1" gate="G$1" pin="TXD"/>
+<pinref part="SERIAL" gate="-1" pin="S"/>
+<wire x1="137.16" y1="109.22" x2="60.96" y2="109.22" width="0.1524" layer="91"/>
+<wire x1="60.96" y1="109.22" x2="60.96" y2="76.2" width="0.1524" layer="91"/>
+<pinref part="ESP8266-01" gate="G$1" pin="TXD"/>
 <wire x1="60.96" y1="76.2" x2="71.12" y2="76.2" width="0.1524" layer="91"/>
+<label x="129.54" y="109.22" size="2.54" layer="95"/>
 </segment>
 </net>
 <net name="N$4" class="0">
 <segment>
-<pinref part="U$1" gate="G$1" pin="GPIO2"/>
+<pinref part="ESP8266-01" gate="G$1" pin="GPIO2"/>
 <wire x1="104.14" y1="78.74" x2="114.3" y2="78.74" width="0.1524" layer="91"/>
 <wire x1="114.3" y1="78.74" x2="114.3" y2="50.8" width="0.1524" layer="91"/>
 <pinref part="U$2" gate="G$1" pin="DATA"/>
 </segment>
 </net>
-<net name="N$5" class="0">
+<net name="VIN+" class="0">
 <segment>
-<pinref part="J2" gate="-1" pin="S"/>
-<pinref part="IC1" gate="G$1" pin="IN"/>
+<pinref part="VIN" gate="-1" pin="S"/>
+<pinref part="AMS1117" gate="G$1" pin="IN"/>
 <wire x1="30.48" y1="38.1" x2="43.18" y2="38.1" width="0.1524" layer="91"/>
+<label x="29.21" y="38.1" size="2.54" layer="95"/>
 </segment>
 </net>
 </nets>
